@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zásilky červen - červenec CD a DVD</title>
+    <style>
+        :root {
+            --primary: #0056b3;
+            --bg-color: #f4f7f6;
+            --box-bg: #ffffff;
+            --text-dark: #333;
+            --text-light: #666;
+            --border-radius: 8px;
+            --timeline-color: #0056b3;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background: #ccc;
+            margin-bottom: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .shipment-box {
+            background: var(--box-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        .shipment-header {
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+        }
+        .shipment-info h2 {
+            margin: 0 0 5px 0;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+        .shipment-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            line-height: 1.4;
+        }
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+        .arrow {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+        .shipment-box.open .arrow {
+            transform: rotate(180deg);
+        }
+        
+        /* Track Button Style */
+        .track-btn {
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: none; /* hidden by default */
+        }
+        .track-btn:hover { background: #004494; }
+
+        .shipment-content {
+            display: none;
+            background: #fafafa;
+        }
+        .shipment-box.open .shipment-content {
+            display: block;
+        }
+        .shipment-content-inner {
+            padding: 20px 20px 20px 30px;
+            border-top: 1px solid #eee;
+        }
+        
+        /* Timeline Styles */
+        .timeline {
+            position: relative;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 5px;
+            width: 2px;
+            background: #ccc;
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 20px;
+        }
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--timeline-color);
+            z-index: 1;
+        }
+        .step-time {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .step-title {
+            margin: 0 0 3px 0;
+            font-size: 1rem;
+        }
+        .step-desc {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        .track-link {
+            color: var(--primary);
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .shipment-header { flex-direction: column; align-items: flex-start; }
+            .header-right { align-items: flex-start; width: 100%; flex-direction: row; justify-content: space-between; margin-top: 10px; }
+            .arrow { margin-top: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Zásilky červen - červenec CD a DVD</h1>
+    <hr>
+
+    <div class="container" id="user-container">
+        </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBBjkIxGuS3hD72Yo92tYh11fzB59u7QVY",
+            authDomain: "zasilky-cerven-cervenec-cddvd.firebaseapp.com",
+            databaseURL: "https://zasilky-cerven-cervenec-cddvd-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "zasilky-cerven-cervenec-cddvd",
+            storageBucket: "zasilky-cerven-cervenec-cddvd.firebasestorage.app",
+            messagingSenderId: "231390166508",
+            appId: "1:231390166508:web:bf33930a7acda822eb54c9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const shipmentsData = {
+            'a': { title: 'Zásilkovna: Mironet + CD-R wrap', desc: 'Obsah zásilky:<br>• 1x wrap /10 kusů/ DVD-R<br>• 3x wrap /10 kusů/ CD-R<br>• 1x spindle /10 kusů/ DVD-R<br>• 1x balení JewelCase /10 kusů/ CD-R Music AUDIO LIVE IT!', carrier: 'Zásilkovna', trackBase: 'https://tracking.packeta.com/cs/' },
+            'b': { title: 'Zásilkovna: Větší balík (bílý)', desc: 'Obsah zásilky:<br>• 1x balení /10 kusů/ CD-R Extra Protection slim<br>• 5x JewelBox CD-R Extra Protection<br>• 5x JewelBox CD-R AZO<br>• 5x JewelBox DVD-R<br>• 10x CD-R Blank v polypropylenové obálce', carrier: 'Zásilkovna', trackBase: 'https://tracking.packeta.com/cs/' },
+            'c': { title: 'Zásilkovna: CD-R AZO balení', desc: 'Obsah zásilky:<br>• 1x balení JewelCase /10 kusů/ CD-R AZO', carrier: 'Zásilkovna', trackBase: 'https://tracking.packeta.com/cs/' },
+            'd': { title: 'Balíkovna: DVD-R balení', desc: 'Obsah zásilky:<br>• 1x balení JewelCase /10 kusů/ DVD-R', carrier: 'Balíkovna', trackBase: 'https://www.balikovna.cz/cs/sledovat-balik/-/balik/' }
+        };
+
+        const stepsTemplate = {
+            1: { title: 'Přijaty informace o objednávce', text: 'Informace o Vaší objednávce byly úspěšně implementovány do systému.' },
+            2: { title: 'Objednávka se začíná zpracovávat', text: 'Ve skladu již kmitají a připravují Vaši objednávku.' },
+            3: { title: 'Zpracováno', text: 'Vaše objednávka se zpracovává a připravuje k expedici.' },
+            4: { title: 'Zkompletováno', text: 'Vaše objednávka je připravena k expedici. Dle Vašich požadavků ji budeme expedovat: 25.6.2025. Čeká na expedici.' },
+            5: { title: 'Objednávka přepravy', text: 'Pro Vaši objednávku jsme právě zarezervovali přepravu na zvolené výdejní místo.' },
+            6: { title: 'Expedice', text: 'Máme pro Vás dobré zprávy! Již se určitě nemůžete dočkat své objednávky - a my ji právě expedujeme! Vaše objednávka byla právě předána k expedici: Hala DC6, Expediční depo, Zvolen - Prolagis Park' },
+            7: { title: 'Na cestě do místního přepravce', text: 'Vaše zásilka je právě na cestě do místního přepravce: {X}' },
+            8: { title: 'Expedováno, dokončeno', text: 'Vaše zásilka byla vyexpedována. Teď už je to v rukou dopravce ({X}).' }
+        };
+
+        const container = document.getElementById('user-container');
+
+        // Funkce pro otevření menu
+        window.toggleAccordion = function(boxId) {
+            const box = document.getElementById(boxId);
+            box.classList.toggle('open');
+        };
+
+        // Naslouchání Firebase databázi
+        onValue(ref(db, 'shipments'), (snapshot) => {
+            const dbData = snapshot.val() || {};
+            container.innerHTML = '';
+
+            for (const [key, shipment] of Object.entries(shipmentsData)) {
+                const sData = dbData[key] || {};
+                const stepsObj = sData.steps || {};
+                const trackingNum = sData.trackingNumber || null;
+                const trackingUrl = trackingNum ? shipment.trackBase + trackingNum : '#';
+                
+                // Získání a řazení stavů (nejnovější nahoře podle časového razítka)
+                let completedSteps = [];
+                for (const [stepId, stepInfo] of Object.entries(stepsObj)) {
+                    if (stepInfo.completed) {
+                        completedSteps.push({
+                            id: parseInt(stepId),
+                            timeDisplay: stepInfo.timeDisplay,
+                            timestamp: stepInfo.timestamp
+                        });
+                    }
+                }
+                
+                // Řazení: sestupně podle času (nejnovější první)
+                completedSteps.sort((a, b) => b.timestamp - a.timestamp);
+
+                let timelineHtml = '<ul class="timeline">';
+                if (completedSteps.length === 0) {
+                    timelineHtml += '<li>Zatím neproběhly žádné kroky.</li>';
+                } else {
+                    completedSteps.forEach(step => {
+                        const template = stepsTemplate[step.id];
+                        const stepText = template.text.replace(/{X}/g, shipment.carrier);
+                        
+                        let titleHtml = template.title;
+                        // Pokud je to krok 5 a máme číslo, přidáme klikatelný odkaz
+                        if (step.id === 5 && trackingNum) {
+                            titleHtml += ` - <a href="${trackingUrl}" target="_blank" class="track-link">Sledovat zásilku</a>`;
+                        }
+
+                        timelineHtml += `
+                            <li class="timeline-item">
+                                <div class="step-time">${step.timeDisplay}</div>
+                                <h3 class="step-title">${titleHtml}</h3>
+                                <p class="step-desc">${stepText}</p>
+                            </li>
+                        `;
+                    });
+                }
+                timelineHtml += '</ul>';
+
+                // Tvorba hlavního obdélníku
+                container.innerHTML += `
+                    <div class="shipment-box" id="user-box-${key}">
+                        <div class="shipment-header" onclick="toggleAccordion('user-box-${key}')">
+                            <div class="shipment-info">
+                                <h2>${shipment.title}</h2>
+                                <p>${shipment.desc}</p>
+                            </div>
+                            <div class="header-right">
+                                <a href="${trackingUrl}" target="_blank" class="track-btn" id="track-btn-${key}" style="display: ${trackingNum ? 'block' : 'none'}">Sledování zásilky</a>
+                                <div class="arrow">▼</div>
+                            </div>
+                        </div>
+                        <div class="shipment-content">
+                            <div class="shipment-content-inner">
+                                ${timelineHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
